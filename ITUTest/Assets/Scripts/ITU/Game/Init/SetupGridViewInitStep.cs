@@ -36,11 +36,9 @@ namespace ITU.Game.Init
 
 		public override Task Shutdown()
 		{
-			for (var i = 0; i < _viewsTab.Length; i++)
+			foreach (TileView view in _viewsTab)
 			{
-				TileView view = _viewsTab[i];
-				Object.Destroy(view);
-				_viewsTab[i] = null;
+				Object.Destroy(view.gameObject);
 			}
 
 			return Task.CompletedTask;

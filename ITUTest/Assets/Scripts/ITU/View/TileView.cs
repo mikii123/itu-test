@@ -7,6 +7,8 @@ public class TileView : MonoBehaviour
 {
 	public Tile Tile { get; private set; }
 
+	[SerializeField] private TileType _type;
+	
 	[SerializeField] private MeshRenderer main;
 	[SerializeField] private MeshRenderer highlight;
 	
@@ -32,11 +34,19 @@ public class TileView : MonoBehaviour
 	{
 		Tile = tile;
 
+		tile.OnTypeChange += OnTypeChanged;
+		
 		transform.localScale = Vector3.one * GameProperties.GridProperties.Value.TileSize;
 		Vector2 vector2 = GameProperties.Grid.GetWorldPositionFromTileIndex(tile.IndexInGrid);
 		transform.position = new Vector3(vector2.x, 0, vector2.y);
 		
-		switch (tile.Type)
+		OnTypeChanged(tile.Type);
+	}
+
+	private void OnTypeChanged(TileType type)
+	{
+		_type = type;
+		switch (type)
 		{
 			case TileType.Walkable:
 				main.sharedMaterial = _walkableMat;
@@ -49,6 +59,14 @@ public class TileView : MonoBehaviour
 				break;
 			default:
 				throw new ArgumentOutOfRangeException();
+		}
+	}
+
+	private void OnDestroy()
+	{
+		if (Tile != null)
+		{
+			Tile.OnTypeChange -= OnTypeChanged;
 		}
 	}
 }

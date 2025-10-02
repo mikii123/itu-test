@@ -1,4 +1,5 @@
-﻿using LELWare.Initialization;
+﻿using System.Threading.Tasks;
+using LELWare.Initialization;
 using UnityEngine;
 
 namespace ITU.Game.Init
@@ -10,13 +11,10 @@ namespace ITU.Game.Init
 		private IInitSystem _initSystem;
 		private GameEntrySteps _steps = new();
 
-		private void Awake()
+		private async void Awake()
 		{
 			Instance = this;
-		}
 
-		private async void Start()
-		{
 			_initSystem = new InitSystem();
 			await _initSystem.Startup(_steps);
 		}
@@ -24,6 +22,12 @@ namespace ITU.Game.Init
 		private async void OnDestroy()
 		{
 			await _initSystem.Shutdown(_steps);
+		}
+
+		public async Task Reload()
+		{
+			await _initSystem.Shutdown(_steps);
+			await _initSystem.Startup(_steps);
 		}
 	}
 }

@@ -4,9 +4,9 @@
 	{
 		public readonly int Columns;
 		public readonly int Rows;
-		public readonly long TileSize;
+		public readonly float TileSize;
 
-		public GridProperties(int columns, int rows, long tileSize)
+		public GridProperties(int columns, int rows, float tileSize)
 		{
 			Columns = columns;
 			Rows = rows;

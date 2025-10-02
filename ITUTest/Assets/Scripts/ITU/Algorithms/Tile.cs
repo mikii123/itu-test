@@ -2,12 +2,22 @@
 
 namespace ITU.Algorithms
 {
-	[Serializable]
-	public struct Tile
+	public class Tile
 	{
 		public int IndexInGrid;
 		public int[] Neighbors;
 		public TileType Type;
+
+		public event Action<TileType> OnTypeChange;
+
+		public void SetType(TileType type)
+		{
+			if (Type != type)
+			{
+				Type = type;
+				OnTypeChange?.Invoke(type);
+			}
+		}
 	}
 
 	public enum TileType

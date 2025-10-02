@@ -8,16 +8,23 @@ namespace ITU.Game.Init
 {
 	public class PreloadAddressablesInitStep : InitStep
 	{
-		private AsyncOperationHandle<GameObject> handle;
+		private AsyncOperationHandle<GameObject> tileHandle;
+		private AsyncOperationHandle<GameObject> playerHandle;
+		private AsyncOperationHandle<GameObject> enemyHandle;
+
 		public override async Task Startup()
 		{
-			handle = Addressables.LoadAssetAsync<GameObject>("TileView");
-			await handle.Task;
+			tileHandle = Addressables.LoadAssetAsync<GameObject>("TileView");
+			playerHandle = Addressables.LoadAssetAsync<GameObject>("Player");
+			enemyHandle = Addressables.LoadAssetAsync<GameObject>("Enemy");
+			await Task.WhenAll(tileHandle.Task, playerHandle.Task, enemyHandle.Task);
 		}
 
 		public override Task Shutdown()
 		{
-			Addressables.Release(handle);
+			Addressables.Release(tileHandle);
+			Addressables.Release(playerHandle);
+			Addressables.Release(enemyHandle);
 			return Task.CompletedTask;
 		}
 	}

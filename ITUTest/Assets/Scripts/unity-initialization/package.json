@@ -1,11 +1,11 @@
 {
-  "name": "com.yhe.initialization",
+  "name": "com.lelware.initialization",
   "version": "1.0.1",
   "displayName": "Initialization",
   "description": "Helps you setup initialization for your project",
   "unity": "2019.1",
   "author": {
     "name": "Mikolaj Bystrzynski",
-    "email": "m.bystrzynski@bf.team"
+    "email": "mikolajbystrzynski@gmail.com"
   }
 }
