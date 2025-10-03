@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using LELWare.Initialization;
 using UnityEngine;
 
@@ -8,6 +9,8 @@ namespace ITU.Game.Init
 	{
 		public static GameEntry Instance { get; private set; }
 
+		public event Action OnStartup;
+		
 		private IInitSystem _initSystem;
 		private GameEntrySteps _steps = new();
 
@@ -17,6 +20,8 @@ namespace ITU.Game.Init
 
 			_initSystem = new InitSystem();
 			await _initSystem.Startup(_steps);
+			
+			OnStartup?.Invoke();
 		}
 
 		private async void OnDestroy()
@@ -28,6 +33,8 @@ namespace ITU.Game.Init
 		{
 			await _initSystem.Shutdown(_steps);
 			await _initSystem.Startup(_steps);
+			
+			OnStartup?.Invoke();
 		}
 	}
 }

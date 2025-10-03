@@ -12,7 +12,7 @@ namespace ITU.Game.Init
 		{
 			GameProperties.GridProperties ??= new GridProperties(20, 20, 1);
 			GameProperties.MoveRange = new (5);
-			GameProperties.AttackRange = new (5);
+			GameProperties.AttackRange = new (1000);
 
 			var grid = new Grid1D<Tile>(GameProperties.GridProperties.Value);
 			GameProperties.Grid = grid;

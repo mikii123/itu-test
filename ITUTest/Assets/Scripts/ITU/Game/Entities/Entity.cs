@@ -10,7 +10,8 @@ namespace ITU.Game.Entities
 	{
 		public void SetPosition(Tile tile)
 		{
-			Vector2 vector2 = GameProperties.Grid.GetWorldPositionFromTileIndex(tile.IndexInGrid);
+			var grid = GameProperties.Grid;
+			Vector2 vector2 = grid.GetWorldPositionFromTileIndex(tile.IndexInGrid) + new Vector2(grid.Properties.TileSize / 2, grid.Properties.TileSize / 2);
 			var vector3 = new Vector3(vector2.x, 0, vector2.y);
 			transform.position = vector3;
 		}

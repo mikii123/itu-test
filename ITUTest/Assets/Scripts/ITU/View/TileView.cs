@@ -8,26 +8,51 @@ public class TileView : MonoBehaviour
 	public Tile Tile { get; private set; }
 
 	[SerializeField] private TileType _type;
-	
+	[SerializeField] private Highlight _highlightType;
+
 	[SerializeField] private MeshRenderer main;
 	[SerializeField] private MeshRenderer highlight;
-	
+
 	[SerializeField] private Material WalkableMat;
-	private static Material _walkableMat;
 	[SerializeField] private Material ObstacleMat;
-	private static Material _obstacleMat;
 	[SerializeField] private Material CoverMat;
-	private static Material _coverMat;
 
 	[SerializeField] private Material HighlightMat;
 	[SerializeField] private Material HighlightRedMat;
 	[SerializeField] private Material HighlightBlueMat;
+	
+	private static Material _walkableMat;
+	private static Material _obstacleMat;
+	private static Material _coverMat;
+	
+	private static Material _highlightNoneMat;
+	private static Material _highlightBlueMat;
+	private static Material _highlightRedMat;
 
+	public enum Highlight
+	{
+		None,
+		Blue,
+		Red
+	}
+	
 	private void Awake()
 	{
 		_walkableMat ??= new Material(WalkableMat);
 		_obstacleMat ??= new Material(ObstacleMat);
 		_coverMat ??= new Material(CoverMat);
+
+		_highlightNoneMat ??= new Material(HighlightMat);
+		_highlightBlueMat ??= new Material(HighlightBlueMat);
+		_highlightRedMat ??= new Material(HighlightRedMat);
+	}
+
+	private void OnDestroy()
+	{
+		if (Tile != null)
+		{
+			Tile.OnTypeChange -= OnTypeChanged;
+		}
 	}
 
 	public void Setup(Tile tile)
@@ -35,12 +60,31 @@ public class TileView : MonoBehaviour
 		Tile = tile;
 
 		tile.OnTypeChange += OnTypeChanged;
-		
+
 		transform.localScale = Vector3.one * GameProperties.GridProperties.Value.TileSize;
 		Vector2 vector2 = GameProperties.Grid.GetWorldPositionFromTileIndex(tile.IndexInGrid);
 		transform.position = new Vector3(vector2.x, 0, vector2.y);
-		
+
 		OnTypeChanged(tile.Type);
+	}
+
+	public void SetHighlight(Highlight type)
+	{
+		_highlightType = type;
+		switch (type)
+		{
+			case Highlight.None:
+				highlight.sharedMaterial = _highlightNoneMat;
+				break;
+			case Highlight.Blue:
+				highlight.sharedMaterial = _highlightBlueMat;
+				break;
+			case Highlight.Red:
+				highlight.sharedMaterial = _highlightRedMat;
+				break;
+			default:
+				throw new ArgumentOutOfRangeException();
+		}
 	}
 
 	private void OnTypeChanged(TileType type)
@@ -59,14 +103,6 @@ public class TileView : MonoBehaviour
 				break;
 			default:
 				throw new ArgumentOutOfRangeException();
-		}
-	}
-
-	private void OnDestroy()
-	{
-		if (Tile != null)
-		{
-			Tile.OnTypeChange -= OnTypeChanged;
 		}
 	}
 }

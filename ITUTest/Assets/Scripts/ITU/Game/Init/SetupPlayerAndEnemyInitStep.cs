@@ -26,7 +26,7 @@ namespace ITU.Game.Init
 					continue;
 				}
 
-				Vector2 position = grid.GetWorldPositionFromTileIndex(i);
+				Vector2 position = grid.GetWorldPositionFromTileIndex(i) + new Vector2(grid.Properties.TileSize / 2, grid.Properties.TileSize / 2);
 				var pos = new Vector3(position.x, 0, position.y);
 				playerHandle = Addressables.InstantiateAsync("Player", pos, Quaternion.identity);
 				
@@ -40,7 +40,7 @@ namespace ITU.Game.Init
 					continue;
 				}
 
-				Vector2 position = grid.GetWorldPositionFromTileIndex(i);
+				Vector2 position = grid.GetWorldPositionFromTileIndex(i) + new Vector2(grid.Properties.TileSize / 2, grid.Properties.TileSize / 2);
 				var pos = new Vector3(position.x, 0, position.y);
 				enemyHandle = Addressables.InstantiateAsync("Enemy", pos, Quaternion.identity);
 				

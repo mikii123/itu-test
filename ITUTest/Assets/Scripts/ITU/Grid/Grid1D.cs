@@ -25,6 +25,9 @@ namespace ITU.Grid
 	/// </summary>
 	public class Grid1D<T> : IEnumerable<T>
 	{
+		public const int NORMAL_COST = 10;
+		public const int DIAGONAL_COST = 14;
+		
 		public T this[int i, int j]
 		{
 			get => m_grid[GetTileIndex(i, j)];
@@ -308,16 +311,7 @@ namespace ITU.Grid
 			GridPosition end = GetTilePosition(to);
 
 			int cost = Math.Abs(start.i - end.i) + Math.Abs(start.j - end.j);
-			if (cost > 1)
-			{
-				// diagonal
-				cost = 14;
-			}
-			else
-			{
-				// horizontal / vertical
-				cost = 10;
-			}
+			cost = cost > 1 ? DIAGONAL_COST : NORMAL_COST;
 
 			return cost;
 		}
@@ -509,6 +503,111 @@ namespace ITU.Grid
 			return !(x < 0 || y < 0 || x > (float)Properties.Columns * Properties.TileSize || y > (float)Properties.Rows * Properties.TileSize);
 		}
 
+		public int[] Raycast(Vector2 from, Vector2 to)
+		{
+			//http://www.cs.yorku.ca/~amana/research/grid.pdf
+			var tiles = new List<int>();
+			Vector2 dir = to - from;
+
+			GridPosition start = GetTilePosition(from.x, from.y, Properties.TileSize);
+			var startIndex = GetTileIndex(start.i, start.j, Properties.Columns);
+
+			GridPosition end = GetTilePosition(to.x, to.y, Properties.TileSize);
+			var endIndex = GetTileIndex(end.i, end.j, Properties.Columns);
+
+			if (startIndex == endIndex)
+			{
+				tiles.Add(startIndex);
+			}
+			else
+			{
+				var i = start.i;
+				var j = start.j;
+
+				var stepI = (int)Mathf.Sign(dir.x);
+				var stepJ = (int)Mathf.Sign(dir.y);
+
+				// Distance along the ray to the next voxel border from the current position (tMaxX, tMaxY, tMaxZ).
+				var nextVoxelBoundaryX = (i + stepI) * Properties.TileSize; // correct
+				var nextVoxelBoundaryY = (j + stepJ) * Properties.TileSize; // correct
+
+				if (stepI < 0)
+				{
+					nextVoxelBoundaryX += Properties.TileSize;
+				}
+
+				if (stepJ < 0)
+				{
+					nextVoxelBoundaryY += Properties.TileSize;
+				}
+
+				// tMaxX, tMaxY, tMaxZ -- distance until next intersection with voxel-border
+				// the value of t at which the ray crosses the first vertical voxel boundary
+				var tMaxX = dir.x != 0 ? (nextVoxelBoundaryX - from.x) / dir.x : float.MaxValue; //
+				var tMaxY = dir.y != 0 ? (nextVoxelBoundaryY - from.y) / dir.y : float.MaxValue; //
+
+				// tDeltaX, tDeltaY, tDeltaZ --
+				// how far along the ray we must move for the horizontal component to equal the width of a voxel
+				// the direction in which we traverse the grid
+				// can only be FLT_MAX if we never go in that direction
+				var tDeltaX = dir.x != 0 ? Properties.TileSize / dir.x * stepI : float.MaxValue;
+				var tDeltaY = dir.y != 0 ? Properties.TileSize / dir.y * stepJ : float.MaxValue;
+
+				tiles.Add(startIndex);
+
+				var maxI = Math.Abs(end.i - start.i);
+				var maxJ = Math.Abs(end.j - start.j);
+
+				var steps = 0;
+				var maxSteps = maxI + maxJ;
+
+				var reached = false;
+				while (!reached)
+				{
+					if (steps > maxSteps)
+					{
+						return tiles.ToArray();
+					}
+
+					if (tMaxX < tMaxY)
+					{
+						tMaxX += tDeltaX;
+						i += stepI;
+					}
+					else if (tMaxX > tMaxY)
+					{
+						tMaxY += tDeltaY;
+						j += stepJ;
+					}
+					else
+					{
+						tMaxX += tDeltaX;
+						tMaxY += tDeltaY;
+						i += stepI;
+						j += stepJ;
+					}
+
+					if (i < 0 || i >= Properties.Columns || j < 0 || j >= Properties.Rows)
+					{
+						return tiles.ToArray();
+					}
+
+					var tileIndex = GetTileIndex(i, j, Properties.Columns);
+
+					tiles.Add(tileIndex);
+
+					if (tileIndex == endIndex)
+					{
+						reached = true;
+					}
+
+					steps++;
+				}
+			}
+
+			return tiles.ToArray();
+		}
+		
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
