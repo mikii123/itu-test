@@ -67,10 +67,16 @@ namespace ITU.View
 							tileView.Tile.SetType((TileType)_currentBrush);
 							break;
 						case BrushType.Player:
-							Player.Instance.SetPosition(tileView.Tile); 
+							if (tileView.Tile.Type == TileType.Walkable)
+							{
+								Player.Instance.SetPosition(tileView.Tile);
+							} 
 							break;
 						case BrushType.Enemy:
-							Enemy.Instance.SetPosition(tileView.Tile); 
+							if (tileView.Tile.Type == TileType.Walkable)
+							{
+								Enemy.Instance.SetPosition(tileView.Tile);
+							} 
 							break;
 					}
 				}

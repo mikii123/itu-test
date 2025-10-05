@@ -6,7 +6,6 @@ using ITU.Game.Entities;
 using ITU.Game.Properties;
 using ITU.Grid;
 using ITU.Utilities;
-using TMPro;
 using UnityEngine;
 
 namespace ITU.View
@@ -24,6 +23,7 @@ namespace ITU.View
 
 		private void OnEnable()
 		{
+			Player.Instance.OnFinishExecution += OnPlayerFinishedExecution;
 			RecalculatePlayerPathfinding();
 		}
 
@@ -34,56 +34,68 @@ namespace ITU.View
 				return;
 			}
 
+			var grid = GameProperties.Grid;
 			Vector3 playerPosition = Player.Instance.transform.position;
 			Vector3 enemyPosition = Enemy.Instance.transform.position;
-			var playerIndex = GameProperties.Grid.GetTileIndexFromWorldPosition(playerPosition.x, playerPosition.z);
-			var enemyIndex = GameProperties.Grid.GetTileIndexFromWorldPosition(enemyPosition.x, enemyPosition.z);
+			var playerIndex = grid.GetTileIndexFromWorldPosition(playerPosition.x, playerPosition.z);
+			var enemyIndex = grid.GetTileIndexFromWorldPosition(enemyPosition.x, enemyPosition.z);
 
 			Camera cam = CameraController.Instance.Camera;
 			Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 			if (Physics.Raycast(ray, out RaycastHit info, 1000, groundMask))
 			{
 				var tileView = info.transform.GetComponentInParent<TileView>();
-				if (tileView != null && _currentHighlight != tileView.Tile.IndexInGrid)
+				if (tileView != null)
 				{
-					_currentHighlight = tileView.Tile.IndexInGrid;
-					if (_currentHighlight == enemyIndex)
+					if (_currentHighlight != tileView.Tile.IndexInGrid)
 					{
-						if (_attackReachable.Length == 0)
+						_currentHighlight = tileView.Tile.IndexInGrid;
+						if (_currentHighlight == enemyIndex)
 						{
-							// out of range
-							tooltip.SetMessage("Out of Range");
+							if (_attackReachable.Length == 0)
+							{
+								// out of range
+								tooltip.SetMessage("Out of Range");
+							}
+							else
+							{
+								// get lowest cost tile
+								Pathfinding.ResultTile lowestCostTile = _attackReachable.GetBestComparison((a, b) => TileComparison(a, b, playerIndex));
+								if (lowestCostTile.Index == playerIndex) // no move required
+								{
+									Player.Instance.SetShot((playerIndex, enemyIndex));
+									Player.Instance.SetPath(null);
+								}
+								else // move and fire
+								{
+									var path = ConstructPath(playerIndex, lowestCostTile.Index);
+									Player.Instance.SetPath(path);
+									Player.Instance.SetShot((lowestCostTile.Index, enemyIndex));
+								}
+
+								tooltip.SetMessage(null);
+							}
 						}
-						else
+						else if (_playerReachable.Any(tile => tile.Index == tileView.Tile.IndexInGrid))
 						{
-							// get lowest cost tile
-							Pathfinding.ResultTile lowestCostTile = _attackReachable.GetBestComparison((a, b) => a.Cost < b.Cost);
-							if (lowestCostTile.Index == playerIndex) // no move required
-							{
-								Player.Instance.SetShot(playerIndex, enemyIndex);
-								Player.Instance.SetPath(null);
-							}
-							else // move and fire
-							{
-								var path = ConstructPath(playerIndex, lowestCostTile.Index);
-								Player.Instance.SetPath(path);
-								Player.Instance.SetShot(lowestCostTile.Index, enemyIndex);
-							}
+							var path = ConstructPath(playerIndex, tileView.Tile.IndexInGrid);
+							Player.Instance.SetPath(path);
+							Player.Instance.SetShot(null);
 
 							tooltip.SetMessage(null);
 						}
+						else
+						{
+							tooltip.SetMessage("Invalid target");
+						}
 					}
-					else if (_playerReachable.Any(tile => tile.Index == tileView.Tile.IndexInGrid))
-					{
-						var path = ConstructPath(playerIndex, tileView.Tile.IndexInGrid);
-						Player.Instance.SetPath(path);
-						Player.Instance.SetShot(false);
 
-						tooltip.SetMessage(null);
-					}
-					else
+					if (Input.GetMouseButtonDown(0) && !BlockUI.UIPointerBlocked)
 					{
-						tooltip.SetMessage("Invalid target");
+						if (Player.Instance.ExecutePath())
+						{
+							ClearPlayerPathfinding();
+						}
 					}
 				}
 			}
@@ -92,6 +104,20 @@ namespace ITU.View
 		private void OnDisable()
 		{
 			ClearPlayerPathfinding();
+			if (Player.Instance != null)
+			{
+				Player.Instance.OnFinishExecution -= OnPlayerFinishedExecution;
+			}
+		}
+
+		private bool TileComparison(Pathfinding.ResultTile a, Pathfinding.ResultTile b, int playerIndex)
+		{
+			// var grid = GameProperties.Grid;
+			// Vector2 aPos = grid.GetWorldPositionFromTileIndex(a.Index);
+			// Vector2 bPos = grid.GetWorldPositionFromTileIndex(b.Index);
+			// Vector2 playerPos = grid.GetWorldPositionFromTileIndex(playerIndex);
+			
+			return a.Cost < b.Cost /*&& Vector2.Distance(aPos, playerPos) < Vector2.Distance(bPos, playerPos)*/;
 		}
 
 		private List<int> ConstructPath(int from, int to)
@@ -173,8 +199,13 @@ namespace ITU.View
 			if (Player.Instance != null)
 			{
 				Player.Instance.SetPath(null);
-				Player.Instance.SetShot(false);
+				Player.Instance.SetShot(null);
 			}
+		}
+
+		private void OnPlayerFinishedExecution()
+		{
+			RecalculatePlayerPathfinding();
 		}
 
 		private async Task<(Pathfinding.ResultTile[], int[])> CalculateFloodFill(int start)

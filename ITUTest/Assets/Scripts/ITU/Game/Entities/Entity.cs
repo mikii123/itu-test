@@ -6,8 +6,10 @@ using UnityEngine;
 namespace ITU.Game.Entities
 {
 	public class Entity<T> : Singleton<T>
-		where T : Singleton<T>
+		where T : Entity<T>
 	{
+		public State<T> CurrentState { get; set; }
+
 		public void SetPosition(Tile tile)
 		{
 			var grid = GameProperties.Grid;
@@ -15,5 +17,30 @@ namespace ITU.Game.Entities
 			var vector3 = new Vector3(vector2.x, 0, vector2.y);
 			transform.position = vector3;
 		}
+	}
+
+	public abstract class State<T>
+		where T : Entity<T>
+	{
+		private bool _initialized;
+
+		public void Execute(T entity)
+		{
+			if (!_initialized)
+			{
+				OnInit(entity);
+				_initialized = true;
+			}
+
+			if (entity.CurrentState != this)
+			{
+				return;
+			}
+			
+			OnExecute(entity);
+		}
+
+		protected abstract void OnInit(T entity);
+		protected abstract void OnExecute(T entity);
 	}
 }

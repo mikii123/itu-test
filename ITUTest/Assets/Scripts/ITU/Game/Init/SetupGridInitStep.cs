@@ -11,8 +11,8 @@ namespace ITU.Game.Init
 		public override Task Startup()
 		{
 			GameProperties.GridProperties ??= new GridProperties(20, 20, 1);
-			GameProperties.MoveRange = new (5);
-			GameProperties.AttackRange = new (1000);
+			GameProperties.MoveRange = new (10);
+			GameProperties.AttackRange = new (20);
 
 			var grid = new Grid1D<Tile>(GameProperties.GridProperties.Value);
 			GameProperties.Grid = grid;

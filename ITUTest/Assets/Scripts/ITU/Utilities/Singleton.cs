@@ -9,7 +9,16 @@ namespace ITU.Utilities
 	{
 		public static T Instance
 		{
-			get => instance ?? (instance = FindObjectOfType<T>());
+			get
+			{
+				if (instance != null)
+				{
+					return instance;
+				}
+
+				instance = FindAnyObjectByType<T>();
+				return instance;
+			}
 			protected set => instance = value;
 		}
 

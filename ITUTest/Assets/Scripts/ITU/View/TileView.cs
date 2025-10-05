@@ -70,6 +70,11 @@ public class TileView : MonoBehaviour
 
 	public void SetHighlight(Highlight type)
 	{
+		if (highlight == null)
+		{
+			return;
+		}
+		
 		_highlightType = type;
 		switch (type)
 		{
@@ -89,6 +94,11 @@ public class TileView : MonoBehaviour
 
 	private void OnTypeChanged(TileType type)
 	{
+		if (main == null)
+		{
+			return;
+		}
+		
 		_type = type;
 		switch (type)
 		{

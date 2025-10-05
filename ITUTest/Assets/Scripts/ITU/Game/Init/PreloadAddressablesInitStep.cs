@@ -11,13 +11,18 @@ namespace ITU.Game.Init
 		private AsyncOperationHandle<GameObject> tileHandle;
 		private AsyncOperationHandle<GameObject> playerHandle;
 		private AsyncOperationHandle<GameObject> enemyHandle;
+		private AsyncOperationHandle<GameObject> shotHandle;
+		private AsyncOperationHandle<GameObject> explosionHandle;
 
 		public override async Task Startup()
 		{
 			tileHandle = Addressables.LoadAssetAsync<GameObject>("TileView");
 			playerHandle = Addressables.LoadAssetAsync<GameObject>("Player");
 			enemyHandle = Addressables.LoadAssetAsync<GameObject>("Enemy");
-			await Task.WhenAll(tileHandle.Task, playerHandle.Task, enemyHandle.Task);
+			shotHandle = Addressables.LoadAssetAsync<GameObject>("Shot");
+			explosionHandle = Addressables.LoadAssetAsync<GameObject>("Explosion");
+			
+			await Task.WhenAll(tileHandle.Task, playerHandle.Task, enemyHandle.Task, shotHandle.Task, explosionHandle.Task);
 		}
 
 		public override Task Shutdown()
@@ -25,6 +30,9 @@ namespace ITU.Game.Init
 			Addressables.Release(tileHandle);
 			Addressables.Release(playerHandle);
 			Addressables.Release(enemyHandle);
+			Addressables.Release(shotHandle);
+			Addressables.Release(explosionHandle);
+			
 			return Task.CompletedTask;
 		}
 	}
